@@ -7,6 +7,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -33,6 +34,8 @@ import java.util.List;
 public class MuleBeforeRunTasksProvider extends BeforeRunTaskProvider<MuleBeforeRunTask>
 {
     public static final Key<MavenBeforeRunTask> ID = Key.create("Mule.BeforeRunTask");
+
+    static final Logger logger = Logger.getInstance(MuleBeforeRunTasksProvider.class);
 
     @Override
     public Key getId()
@@ -156,8 +159,10 @@ public class MuleBeforeRunTasksProvider extends BeforeRunTaskProvider<MuleBefore
             {
                 for (MavenProject mavenProj : projects)
                 {
-                    if (moduleName.equals(mavenProj.getName()))
+                    if (moduleName.equals(mavenProj.getName()) ||
+                      mavenProj.getMavenId().getArtifactId().equals(moduleName))
                     {
+                        logger.debug("Using Module: " + moduleName);
                         muleMavenProject = mavenProj;
                     }
                 }
