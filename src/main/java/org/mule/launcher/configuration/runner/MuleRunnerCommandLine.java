@@ -1,11 +1,14 @@
 package org.mule.launcher.configuration.runner;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.CommandLineBuilder;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.JavaCommandLineState;
 import com.intellij.execution.configurations.JavaParameters;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -26,6 +29,8 @@ public class MuleRunnerCommandLine extends JavaCommandLineState implements MuleR
     //Mule Main Class
     public static final String MAIN_CLASS = "org.mule.module.launcher.MuleContainer";
 
+    static final Logger logger = Logger.getInstance(MuleRunnerCommandLine.class);
+
     private MuleConfiguration model;
 
     private final boolean isDebug;
@@ -43,13 +48,13 @@ public class MuleRunnerCommandLine extends JavaCommandLineState implements MuleR
         Project project = this.model.getProject();
         ProjectRootManager manager = ProjectRootManager.getInstance(project);
         javaParams.setJdk(manager.getProjectSdk());
-        // All modules to use the same things
-        Module[] modules = ModuleManager.getInstance(project).getModules();
-        if (modules.length > 0) {
-            for (Module module : modules) {
-                javaParams.configureByModule(module, JavaParameters.JDK_AND_CLASSES);
-            }
-        }
+//        // All modules to use the same things
+//        Module[] modules = ModuleManager.getInstance(project).getModules();
+//        if (modules.length > 0) {
+//            for (Module module : modules) {
+//                javaParams.configureByModule(module, JavaParameters.JDK_AND_CLASSES);
+//            }
+//        }
 
         final String muleHome = model.getMuleHome();
         final MuleClassPath muleClassPath = new MuleClassPath(new File(muleHome));
@@ -110,6 +115,13 @@ public class MuleRunnerCommandLine extends JavaCommandLineState implements MuleR
     protected OSProcessHandler startProcess() throws ExecutionException {
         deployApp();
         return super.startProcess();
+    }
+
+    protected GeneralCommandLine createCommandLine() throws ExecutionException {
+        final Project project = getEnvironment().getProject();
+        GeneralCommandLine commandLine = CommandLineBuilder.createFromJavaParameters(getJavaParameters(), project, false);
+        logger.debug("Mule command line: ", commandLine.getCommandLineString());
+        return commandLine;
     }
 
     private void deployApp() throws ExecutionException {
